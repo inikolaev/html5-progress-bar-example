@@ -1,0 +1,116 @@
+<html>
+    <head>
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,200,300,400,500" rel="stylesheet">
+        <style>
+            body {
+                margin: 0;
+            }
+
+            #progress-wrapper {
+                position: relative;
+                height: 11px;
+                overflow: hidden;
+            }
+
+            #progress {
+                height: 11px;
+                width: 100%;
+                background-color: #ff6900;
+                transform: translateX(-100%);
+                transition: transform 1s linear;
+                text-align: right;
+            }
+
+            #label {
+                display: inline-block;
+                color: #FFF;
+                font-family: "Roboto";
+                font-weight: 300;
+                font-size: 10px;
+                margin: 0 2px;
+                transform: translateZ(0);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="progress-wrapper"><div id="progress"><span id="label">0 %</span></div></div>
+        <button onclick="stopProgress()">Stop</button>
+        <button onclick="resetProgress()">Reset</button>
+    </body>
+    <script>
+        var progress = createProgress("progress-wrapper");
+
+        progress.start(30);
+
+        function stopProgress() {
+            progress.stop();
+        }
+
+        function resetProgress() {
+            progress.reset();
+            progress.start(30);
+        }
+
+        function createProgress(id) {
+            var container = document.getElementById(id);
+            var progress = document.getElementById("progress");
+            var label = document.getElementById("label");
+
+            var start = null;
+            var last = null;
+            var timer = null;
+
+            return {
+                start: function(time) {
+                    start = last = new Date().getTime();
+
+                    timer = setInterval(function(e) {
+                        var now = new Date().getTime();
+
+                        if (start < now) {
+                            var diff = now - start /*+ 1000*/;
+                            var seconds = (now - last) / 1000;
+                            var percent = 100 * diff / (time * 1000);
+
+                            if (percent > 100) {
+                                percent = 100;
+                                clearInterval(timer);
+                            }
+
+                            requestAnimationFrame(function() {
+                                label.textContent = Math.floor(percent) + " %";
+                                progress.style.transitionDuration = seconds + "s";
+                                progress.style.transitionTimingFunction = "linear";
+                                progress.style.transform = "translateX(" + (-100 + percent) + "%)";
+                            });
+                        }
+
+                        last = now;
+                    }, 1000);
+                    progress.offsetHeight; // this is to flush CSS
+                    progress.style.transform = "translateX(-100%)";
+                },
+
+                stop: function() {
+                    if (timer) {
+                        console.log("Clearing timer");
+                        clearInterval(timer);
+                        timer = null;
+                    }
+                },
+
+                reset: function() {
+                    if (timer) {
+                        clearInterval(timer);
+                        timer = null;
+                    }
+
+                    progress.style.transitionDuration = "0s";
+                    progress.style.transitionTimingFunction = "linear";
+                    progress.offsetHeight; // this is to flush CSS
+                    progress.style.transform = "translateX(-100%)";
+                }
+            }
+        }
+    </script>
+</html>
